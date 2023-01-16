@@ -151,6 +151,8 @@ ${pdf_svlint}: ${BUILD}/patch_svlint | ${build_doc}
 ${exe_svlint}: ${BUILD}/patch_svlint | ${build_bin}
 	cd svlint && cargo build --release
 	cp svlint/target/release/svlint $@
+	cp svlint/rulesets/*.toml ${build_bin}
+	find svlint/rulesets/ -type f -perm -u=x -exec cp {} ${build_bin} +
 
 ${exe_svls}: ${BUILD}/patch_svls | ${build_bin}
 	cd svls && cargo build --release
