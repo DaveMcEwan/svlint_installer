@@ -40,7 +40,8 @@ REVISION_SVLS			?= v0.2.6
 # directory.
 # NOTE: If this is set to `build`, then neither `make` or `make build` will
 # work as intended.
-BUILD ?= out
+THIS ?= $(realpath $(shell pwd))
+BUILD ?= $(realpath $(shell pwd))/out
 
 install_topdefault := ${HOME}/svlint_${TAG}
 # `INSTALL_*` variables are used by the `install_` recipes as the destination
@@ -59,9 +60,9 @@ INSTALL_MODULEFILES ?= ${install_topdefault}/modulefiles
 # {{{ fetch
 
 .PHONY: fetch
-fetch: fetch_svparser
-fetch: fetch_svlint
-fetch: fetch_svls
+fetch: ${BUILD}/fetch_svparser
+fetch: ${BUILD}/fetch_svlint
+fetch: ${BUILD}/fetch_svls
 
 ${BUILD}/fetch_svparser: | ${BUILD}
 	git clone ${REPO_SVPARSER}
@@ -87,24 +88,39 @@ ${BUILD}/fetch_svls: | ${BUILD}
 # {{{ patch
 
 .PHONY: patch
-patch: fetch_svparser
-patch: fetch_svlint
-patch: fetch_svls
+patch: ${BUILD}/patch_svparser
+patch: ${BUILD}/patch_svlint
+patch: ${BUILD}/patch_svls
 
-patchfile_svparser: svparser.patch
-patchfile_svlint: svlint.patch
-patchfile_svls: svls.patch
+PATCHFILE_SVPARSER := ${THIS}/svparser.patch
+PATCHFILE_SVLINT := ${THIS}/svlint.patch
+PATCHFILE_SVLS := ${THIS}/svls.patch
 
-${BUILD}/patch_svparser: ${patchfile_svparser} ${BUILD}/fetch_svparser
-	[ -f $< ] && cd sv-parser && git apply $< && echo "applied $<" > $@
+${BUILD}/patch_svparser: ${PATCHFILE_SVPARSER}
+${BUILD}/patch_svparser: ${BUILD}/fetch_svparser
+	(grep -q '.+' ${PATCHFILE_SVPARSER} && \
+		cd sv-parser && git apply ${PATCHFILE_SVPARSER} && \
+		echo "applied ${PATCHFILE_SVPARSER}" > $@ \
+		) || \
+		echo "unused ${PATCHFILE_SVPARSER}" > $@
 	date >> $@
 
-${BUILD}/patch_svlint: ${patchfile_svlint} ${BUILD}/fetch_svlint
-	[ -f $< ] && cd svlint && git apply $< && echo "applied $<" > $@
+${BUILD}/patch_svlint: ${PATCHFILE_SVLINT}
+${BUILD}/patch_svlint: ${BUILD}/fetch_svlint
+	(grep -q '.+' ${PATCHFILE_SVLINT} && \
+		cd svlint && git apply ${PATCHFILE_SVLINT} && \
+		echo "applied ${PATCHFILE_SVLINT}" > $@ \
+		) || \
+		echo "unused ${PATCHFILE_SVLINT}" > $@
 	date >> $@
 
-${BUILD}/patch_svls: ${patchfile_svls} ${BUILD}/fetch_svls
-	[ -f $< ] && cd svls && git apply $< && echo "applied $<" > $@
+${BUILD}/patch_svls: ${PATCHFILE_SVLS}
+${BUILD}/patch_svls: ${BUILD}/fetch_svls
+	(grep -q '.+' ${PATCHFILE_SVLS} && \
+		cd svls && git apply ${PATCHFILE_SVLS} && \
+		echo "applied ${PATCHFILE_SVLS}" > $@ \
+		) || \
+		echo "unused ${PATCHFILE_SVLS}" > $@
 	date >> $@
 
 # }}} patch
@@ -134,7 +150,7 @@ build: ${exe_svls}
 build: ${modulefile}
 
 ${BUILD}:
-	mkdir ${BUILD}
+	mkdir -p ${BUILD}
 ${build_bin}:
 	mkdir -p ${build_bin}
 ${build_doc}:
@@ -142,19 +158,26 @@ ${build_doc}:
 ${build_modulefiles}:
 	mkdir -p ${build_modulefiles}
 
-${md_svlint}: ${BUILD}/patch_svlint | ${build_doc}
+${md_svlint}: ${BUILD}/patch_svlint
+${md_svlint}: | ${build_doc}
 	cp svlint/MANUAL.md $@
 
-${pdf_svlint}: ${BUILD}/patch_svlint | ${build_doc}
+${pdf_svlint}: ${BUILD}/patch_svlint
+${pdf_svlint}: | ${build_doc}
 	pandoc -f svlint/MANUAL.md -t $@
 
-${exe_svlint}: ${BUILD}/patch_svlint | ${build_bin}
+${exe_svlint}: ${BUILD}/patch_svparser
+${exe_svlint}: ${BUILD}/patch_svlint
+${exe_svlint}: | ${build_bin}
 	cd svlint && cargo build --release
 	cp svlint/target/release/svlint $@
 	cp svlint/rulesets/*.toml ${build_bin}
 	find svlint/rulesets/ -type f -perm -u=x -exec cp {} ${build_bin} +
 
-${exe_svls}: ${BUILD}/patch_svls | ${build_bin}
+${exe_svls}: ${BUILD}/patch_svparser
+${exe_svls}: ${BUILD}/patch_svlint
+${exe_svls}: ${BUILD}/patch_svls
+${exe_svls}: | ${build_bin}
 	cd svls && cargo build --release
 	cp svls/target/release/svls $@
 

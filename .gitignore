@@ -1,0 +1,9 @@
+
+# Default build directory.
+out/**
+
+# Fetched repositories.
+sv-parser
+svlint
+svls
+
