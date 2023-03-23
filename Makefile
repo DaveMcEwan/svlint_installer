@@ -1,4 +1,8 @@
 
+# TL;DR: To install svlint and svls into `$HOME/svlint_123abc`, run:
+#		`make install`
+# The `123abc` string is the latest tag (otherwise commit hash) on this repo.
+#
 # Outline of intended operation
 # -----------------------------
 # fetch:
@@ -32,54 +36,63 @@ REPO_SVLS			?= https://github.com/dalance/svls.git
 # Revision specifiers for individual components can be branch names, tags, or
 # commit hashes.
 # https://git-scm.com/docs/gitrevisions
-REVISION_SVPARSER ?= v0.12.2
-REVISION_SVLINT		?= v0.6.1
-REVISION_SVLS			?= v0.2.6
+REVISION_SVPARSER ?= v0.13.1
+REVISION_SVLINT		?= v0.7.1
+REVISION_SVLS			?= v0.2.8
 
-# Before any installation, all files are copied to somewhere under the ${BUILD}
+# Before any installation, all files are copied to somewhere under the ${OUT}
 # directory.
 # NOTE: If this is set to `build`, then neither `make` or `make build` will
 # work as intended.
 THIS ?= $(realpath $(shell pwd))
-BUILD ?= $(realpath $(shell pwd))/out
+OUT ?= $(realpath $(shell pwd))/out
+IN ?= $(realpath $(shell pwd))/in
 
-install_topdefault := ${HOME}/svlint_${TAG}
+INSTALL_TOPDEFAULT ?= ${HOME}/svlint_${TAG}
 # `INSTALL_*` variables are used by the `install_` recipes as the destination
-# for files to be copied from ${BUILD}, the only source.
+# for files to be copied from ${OUT}, the only source.
 # It is not required for the doc, bin, and modulefiles pieces to be copied
 # under a common ancestor.
 # It is intended that branches of this repo will change these destinations to
 # something else, for example `INSTALL_BIN=/cad/bin/svlint/${TAG}/bin` and
-# `INSTALL_MODULEFILES=/projects/modulefiles/svlint_${TAG}`.
-# TODO
-INSTALL_DOC ?= ${install_topdefault}/doc
-INSTALL_BIN ?= ${install_topdefault}/bin
-INSTALL_MODULEFILES ?= ${install_topdefault}/modulefiles
+# `INSTALL_MODULEFILES=/projects/modulefiles/svlint`.
+INSTALL_DOC ?= ${INSTALL_TOPDEFAULT}/doc
+INSTALL_BIN ?= ${INSTALL_TOPDEFAULT}/bin
+INSTALL_MODULEFILES ?= ${INSTALL_TOPDEFAULT}/modulefiles
 
 # Download component repositories, then checkout a specific revision.
 # {{{ fetch
 
 .PHONY: fetch
-fetch: ${BUILD}/fetch_svparser
-fetch: ${BUILD}/fetch_svlint
-fetch: ${BUILD}/fetch_svls
+fetch: ${OUT}/fetch_svparser
+fetch: ${OUT}/fetch_svlint
+fetch: ${OUT}/fetch_svls
 
-${BUILD}/fetch_svparser: | ${BUILD}
-	git clone ${REPO_SVPARSER}
-	cd sv-parser && git checkout ${REVISION_SVPARSER}
-	cd sv-parser && git describe --tags --always > $@
+${IN}:
+	mkdir -p ${IN}
+
+${OUT}:
+	mkdir -p ${OUT}
+
+${OUT}/fetch_svparser: | ${IN}
+${OUT}/fetch_svparser: | ${OUT}
+	cd ${IN} && git clone ${REPO_SVPARSER}
+	cd ${IN}/sv-parser && git checkout ${REVISION_SVPARSER}
+	cd ${IN}/sv-parser && git describe --tags --always > $@
 	date >> $@
 
-${BUILD}/fetch_svlint: | ${BUILD}
-	git clone ${REPO_SVLINT}
-	cd svlint && git checkout ${REVISION_SVLINT}
-	cd svlint && git describe --tags --always > $@
+${OUT}/fetch_svlint: | ${IN}
+${OUT}/fetch_svlint: | ${OUT}
+	cd ${IN} && git clone ${REPO_SVLINT}
+	cd ${IN}/svlint && git checkout ${REVISION_SVLINT}
+	cd ${IN}/svlint && git describe --tags --always > $@
 	date >> $@
 
-${BUILD}/fetch_svls: | ${BUILD}
-	git clone ${REPO_SVLS}
-	cd svls && git checkout ${REVISION_SVLS}
-	cd svls && git describe --tags --always > $@
+${OUT}/fetch_svls: | ${IN}
+${OUT}/fetch_svls: | ${OUT}
+	cd ${IN} && git clone ${REPO_SVLS}
+	cd ${IN}/svls && git checkout ${REVISION_SVLS}
+	cd ${IN}/svls && git describe --tags --always > $@
 	date >> $@
 
 # }}} fetch
@@ -88,36 +101,36 @@ ${BUILD}/fetch_svls: | ${BUILD}
 # {{{ patch
 
 .PHONY: patch
-patch: ${BUILD}/patch_svparser
-patch: ${BUILD}/patch_svlint
-patch: ${BUILD}/patch_svls
+patch: ${OUT}/patch_svparser
+patch: ${OUT}/patch_svlint
+patch: ${OUT}/patch_svls
 
 PATCHFILE_SVPARSER := ${THIS}/svparser.patch
 PATCHFILE_SVLINT := ${THIS}/svlint.patch
 PATCHFILE_SVLS := ${THIS}/svls.patch
 
-${BUILD}/patch_svparser: ${PATCHFILE_SVPARSER}
-${BUILD}/patch_svparser: ${BUILD}/fetch_svparser
+${OUT}/patch_svparser: ${PATCHFILE_SVPARSER}
+${OUT}/patch_svparser: ${OUT}/fetch_svparser
 	(grep -q '.+' ${PATCHFILE_SVPARSER} && \
-		cd sv-parser && git apply ${PATCHFILE_SVPARSER} && \
+		cd ${IN}/sv-parser && git apply ${PATCHFILE_SVPARSER} && \
 		echo "applied ${PATCHFILE_SVPARSER}" > $@ \
 		) || \
 		echo "unused ${PATCHFILE_SVPARSER}" > $@
 	date >> $@
 
-${BUILD}/patch_svlint: ${PATCHFILE_SVLINT}
-${BUILD}/patch_svlint: ${BUILD}/fetch_svlint
+${OUT}/patch_svlint: ${PATCHFILE_SVLINT}
+${OUT}/patch_svlint: ${OUT}/fetch_svlint
 	(grep -q '.+' ${PATCHFILE_SVLINT} && \
-		cd svlint && git apply ${PATCHFILE_SVLINT} && \
+		cd ${IN}/svlint && git apply ${PATCHFILE_SVLINT} && \
 		echo "applied ${PATCHFILE_SVLINT}" > $@ \
 		) || \
 		echo "unused ${PATCHFILE_SVLINT}" > $@
 	date >> $@
 
-${BUILD}/patch_svls: ${PATCHFILE_SVLS}
-${BUILD}/patch_svls: ${BUILD}/fetch_svls
+${OUT}/patch_svls: ${PATCHFILE_SVLS}
+${OUT}/patch_svls: ${OUT}/fetch_svls
 	(grep -q '.+' ${PATCHFILE_SVLS} && \
-		cd svls && git apply ${PATCHFILE_SVLS} && \
+		cd ${IN}/svls && git apply ${PATCHFILE_SVLS} && \
 		echo "applied ${PATCHFILE_SVLS}" > $@ \
 		) || \
 		echo "unused ${PATCHFILE_SVLS}" > $@
@@ -126,60 +139,73 @@ ${BUILD}/patch_svls: ${BUILD}/fetch_svls
 # }}} patch
 
 # Use cargo to compile binary executables, write a modulefile, convert
-# manual(s) to PDF, and copy results to ${BUILD}.
+# manual(s) to PDF, and copy results to ${OUT}.
 # {{{ build
 
-# Files produced under `build/` can come from a variety of sources, e.g.
-# `build/bin/svlint` is copied from under `svlint/target/release/...` and
-# `build/modulefiles/svlint_v0.6.1` is written directly from this Makefile.
-build_doc := ${BUILD}/doc
-build_bin := ${BUILD}/bin
-build_modulefiles := ${BUILD}/modulefiles
+# Files produced under `out/` can come from a variety of sources, e.g.
+# `out/bin/svlint` is copied from under `svlint/target/release/...` and
+# `out/modulefiles/svlint_v0.6.1` is written directly from this Makefile.
+out_doc := ${OUT}/doc
+out_bin := ${OUT}/bin
+out_modulefiles := ${OUT}/modulefiles
 
-md_svlint := ${build_doc}/svlint_${REVISION_SVLINT}_manual.md
-pdf_svlint := ${build_doc}/svlint_${REVISION_SVLINT}_manual.pdf
-exe_svlint := ${build_bin}/svlint
-exe_svls := ${build_bin}/svls
-modulefile := ${build_modulefiles}/svlint_${TAG}
+md_svlint := ${out_doc}/svlint_MANUAL_${REVISION_SVLINT}.md
+pdf_svlint := ${out_doc}/svlint_MANUAL_${REVISION_SVLINT}.pdf
+exe_svlint := ${out_bin}/svlint
+exe_svls := ${out_bin}/svls
+modulefile := ${out_modulefiles}/svlint-${TAG}
 
 .PHONY: build
-build: ${md_svlint}
-build: ${pdf_svlint}
-build: ${exe_svlint}
-build: ${exe_svls}
-build: ${modulefile}
+build: ${OUT}/build_svlint
+build: ${OUT}/build_svls
 
-${BUILD}:
-	mkdir -p ${BUILD}
-${build_bin}:
-	mkdir -p ${build_bin}
-${build_doc}:
-	mkdir -p ${build_doc}
-${build_modulefiles}:
-	mkdir -p ${build_modulefiles}
+# NOTE: The `build` target doesn't depend on the modulefile, to allow splitting
+# of the build and install stages without needing to set HOME or INSTALL_*:
+#   make build
+#   make install HOME=/path/to/target/dir
+#build: ${OUT}/build_modulefile
 
-${md_svlint}: ${BUILD}/patch_svlint
-${md_svlint}: | ${build_doc}
-	cp svlint/MANUAL.md $@
+${out_bin}:
+	mkdir -p ${out_bin}
+${out_doc}:
+	mkdir -p ${out_doc}
+${out_modulefiles}:
+	mkdir -p ${out_modulefiles}
 
-${pdf_svlint}: ${BUILD}/patch_svlint
-${pdf_svlint}: | ${build_doc}
-	pandoc -f svlint/MANUAL.md -t $@
+${OUT}/build_svlint: ${md_svlint}
+${OUT}/build_svlint: ${pdf_svlint}
+${OUT}/build_svlint: ${exe_svlint}
+	date > $@
 
-${exe_svlint}: ${BUILD}/patch_svparser
-${exe_svlint}: ${BUILD}/patch_svlint
-${exe_svlint}: | ${build_bin}
-	cd svlint && cargo build --release
-	cp svlint/target/release/svlint $@
-	cp svlint/rulesets/*.toml ${build_bin}
-	find svlint/rulesets/ -type f -perm -u=x -exec cp {} ${build_bin} +
+${OUT}/build_svls: ${exe_svls}
+	date > $@
 
-${exe_svls}: ${BUILD}/patch_svparser
-${exe_svls}: ${BUILD}/patch_svlint
-${exe_svls}: ${BUILD}/patch_svls
-${exe_svls}: | ${build_bin}
-	cd svls && cargo build --release
-	cp svls/target/release/svls $@
+${OUT}/build_modulefile: ${modulefile}
+	date > $@
+
+${md_svlint}: ${OUT}/patch_svlint
+${md_svlint}: | ${out_doc}
+	cp ${IN}/svlint/MANUAL.md $@
+
+${pdf_svlint}: ${OUT}/patch_svlint
+${pdf_svlint}: | ${out_doc}
+	cd ${IN}/svlint; make MANUAL-release
+	cp ${IN}/svlint/MANUAL-release.pdf $@
+
+${exe_svlint}: ${OUT}/patch_svparser
+${exe_svlint}: ${OUT}/patch_svlint
+${exe_svlint}: | ${out_bin}
+	cd ${IN}/svlint && cargo build --release
+	cp ${IN}/svlint/rulesets/*.toml ${out_bin}
+	find ${IN}/svlint/rulesets/ -type f -perm -u=x -exec cp {} ${out_bin} \;
+	cp ${IN}/svlint/target/release/svlint $@
+
+${exe_svls}: ${OUT}/patch_svparser
+${exe_svls}: ${OUT}/patch_svlint
+${exe_svls}: ${OUT}/patch_svls
+${exe_svls}: | ${out_bin}
+	cd ${IN}/svls && cargo build --release
+	cp ${IN}/svls/target/release/svls $@
 
 # Convenience variable, used to get newline characters out of this Makefile.
 define newline
@@ -206,7 +232,7 @@ endef
 
 # NOTE: Given that you're using GNU/Modulefiles, it's reasonable to assume
 # you're using a version of `echo` that supports `-e`.
-${modulefile}: | ${build_modulefiles}
+${modulefile}: | ${out_modulefiles}
 	echo -e '$(subst ${newline},\n,${body_modulefile})' > $@
 
 # }}} build
@@ -214,26 +240,32 @@ ${modulefile}: | ${build_modulefiles}
 # Copy built files to their intended destination.
 # {{{ install
 
-.PHONY: install install_bin install_doc install_modulefiles
-install: install_doc
-install: install_bin
-install: install_modulefiles
+.PHONY: install
+install: ${OUT}/build_svlint
+install: ${OUT}/build_svls
+install: ${OUT}/build_modulefile
+install: ${OUT}/install_doc
+install: ${OUT}/install_bin
+install: ${OUT}/install_modulefiles
 
-install_doc:
+${OUT}/install_doc:
 	mkdir -p ${INSTALL_BIN}
-	cp ${build_bin}/* ${INSTALL_BIN}/
+	cp ${out_bin}/* ${INSTALL_BIN}/
+	date > $@
 
-install_bin:
+${OUT}/install_bin:
 	mkdir -p ${INSTALL_DOC}
-	cp ${build_doc}/* ${INSTALL_DOC}/
+	cp ${out_doc}/* ${INSTALL_DOC}/
+	date > $@
 
-install_modulefiles:
+${OUT}/install_modulefiles:
 	mkdir -p ${INSTALL_MODULEFILES}
-	cp ${build_modulefiles}/* ${INSTALL_MODULEFILES}/
+	cp ${out_modulefiles}/* ${INSTALL_MODULEFILES}/
+	date > $@
 
 # }}} install
 
 .PHONY: clean
 clean:
-	rm -rf ${BUILD}
+	rm -rf ${IN} ${OUT}
 
