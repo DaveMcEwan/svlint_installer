@@ -221,7 +221,7 @@ set TAG "svlint_installer ${TAG}"
 
 proc ModulesHelp {} {
   global TAG
-  puts stderr "\tAdd svlint/svls to you environment, packaged by $$TAG."
+  puts stderr "\tAdds svlint/svls to your environment, packaged by $$TAG."
 	puts stderr "\t<https://github.com/DaveMcEwan/svlint_installer>"
 }
 
