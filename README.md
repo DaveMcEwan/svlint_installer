@@ -22,7 +22,7 @@ $ git checkout v0.9.0
 ```
 
 Tags on the master branch of this repository should reflect the reference tag
-on the [https://github.com/dalance/svlint](svlint repository).
+on the [svlint repository](https://github.com/dalance/svlint).
 Tags on other branches should be prefixed by the respective branch name.
 
 
@@ -73,8 +73,8 @@ modulefiles in another, e.g. `/cad/modules/modulefiles/svlint/svlint-v0.9.0`.
 
 ```sh
 $ make \
-    INSTALL_DOC=/cad/tools/svlist/v0.9.0/doc \
-    INSTALL_BIN=/cad/tools/svlist/v0.9.0/bin \
+    INSTALL_DOC=/cad/tools/svlint/v0.9.0/doc \
+    INSTALL_BIN=/cad/tools/svlint/v0.9.0/bin \
     INSTALL_MODULEFILES=/cad/modules/modulefiles/svlint \
     install
 ```
