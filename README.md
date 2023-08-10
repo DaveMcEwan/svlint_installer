@@ -42,7 +42,7 @@ Optionally, you can perform everything in one step by simply using the second
 command (`make install`).
 
 Now, you should see all installed files under one directory:
-```
+```sh
 $ cd ${HOME}/svlint_v0.9.0/
 $ find -type f
 ./bin/svlint
@@ -71,7 +71,7 @@ For example, documentation and binaries under one directory, e.g.
 `/cad/tools/svlint/v0.9.0/doc/*` and `/cad/tools/svlint/v0.9.0/bin/*`, and
 modulefiles in another, e.g. `/cad/modules/modulefiles/svlint/svlint-v0.9.0`.
 
-```
+```sh
 $ make \
     INSTALL_DOC=/cad/tools/svlist/v0.9.0/doc \
     INSTALL_BIN=/cad/tools/svlist/v0.9.0/bin \
@@ -84,3 +84,49 @@ First, setup the GNU Modulefiles system in their `~/.bashrc` (or similar) like
 `module use /cad/modules/modulefiles`.
 Second, configure each shell to use a particular version of svlint like
 `module load svlint/svlint-v0.9.0` or `module load svlint/svlint-custom1.2.3`.
+
+
+Shell Completion Scripts
+------------------------
+
+While not (currently) part of the modulefile's functionality, users may wish
+to setup shell completions, i.e. on the command line typing
+`svlint --dum` then pressing `<TAB>` should show the options `--dump-filelist`
+and `--dump-syntaxtree`.
+As of v0.9.0, svlint includes the option `--shell-completion` which can be used
+to create completion scripts which the user can source, usually in their shell
+configuration like `~/.bashrc` or equivalent.
+
+For example, in Bash:
+```bash
+module load svlint-v0.9.0
+
+# Create the shell completion script (only once).
+# The exact location `~/.bash_completion.d/` is not important, but the
+# directory path must exist before the file is written there.
+svlint --shell-completion=bash > ~/.bash_completion.d/svlint-v0.9.0
+
+# Source the completion script to enable completion functionality.
+# This can also be added to your `~/.bashrc`.
+. ~/.bash_completion.d/svlint-v0.9.0
+```
+
+Now you can test the completions.
+First, complete as much as possible with a single `<TAB>`.
+```bash
+svlint --dum<TAB>
+```
+The command should complete to `svlint --dump-`
+
+Second, show completable options with a double `<TAB>`.
+```bash
+svlint --dum<TAB><TAB>
+```
+You should see the command first complete to `svlint --dump-`, then print a
+line showing `--dump-filelist --dump-syntaxtree`.
+
+Supported shells include [Bash](https://www.gnu.org/software/bash/),
+[Zsh](https://zsh.sourceforge.io/),
+[Powershell](https://learn.microsoft.com/en-us/powershell/),
+[Fish-shell](https://fishshell.com/),
+and [Elvish](https://elv.sh/).
