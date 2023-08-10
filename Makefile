@@ -37,8 +37,8 @@ REPO_SVLS			?= https://github.com/dalance/svls.git
 # commit hashes.
 # https://git-scm.com/docs/gitrevisions
 REVISION_SVPARSER ?= v0.13.1
-REVISION_SVLINT		?= v0.7.1
-REVISION_SVLS			?= v0.2.8
+REVISION_SVLINT		?= v0.9.0
+REVISION_SVLS			?= 13ed00918b1def5d5717b3f0fa204e1e64b69ac1
 
 # Before any installation, all files are copied to somewhere under the ${OUT}
 # directory.

@@ -1,10 +1,10 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 1357b34..b9f79f9 100644
+index b71a59a..0b06b8a 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -36,6 +36,6 @@ tokio        = {version = "1.6", features = ["io-std", "macros", "rt", "test-uti
- toml         = "0.5"
- tower-lsp    = "0.17"
+@@ -39,6 +39,6 @@ tower-lsp    = "0.19"
+ [profile.release]
+ codegen-units = 1
  
 -#[patch.crates-io]
 -#sv-parser = {path = "../sv-parser/sv-parser"}
