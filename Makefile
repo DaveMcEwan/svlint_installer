@@ -185,9 +185,10 @@ ${OUT}/build_modulefile: ${modulefile}
 
 ${md_svlint}: ${OUT}/patch_svlint
 ${md_svlint}: | ${out_doc}
+	cd ${IN}/svlint && cargo run --bin=mdgen
 	cp ${IN}/svlint/MANUAL.md $@
 
-${pdf_svlint}: ${OUT}/patch_svlint
+${pdf_svlint}: ${OUT}/md_svlint
 ${pdf_svlint}: | ${out_doc}
 	cd ${IN}/svlint; make MANUAL-release
 	cp ${IN}/svlint/MANUAL-release.pdf $@
